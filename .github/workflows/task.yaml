@@ -1,0 +1,102 @@
+name: django app
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+
+  prepare:
+    outputs:
+      image_version: ${{ steps.set_version.outputs.version }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: check out
+        uses: actions/checkout@v4
+
+      - name: extract version (main)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          ls -a book-shop
+          echo "VERSION=$(grep 'version' book_shop/book-shop/pyproject.toml | grep -Eo '[0-9]+\.[0-9]+([.][0-9]+)*|[0-9]+')" >> "$GITHUB_ENV"
+
+      - name: extract version (dev)
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          ls -a book-shop
+          echo "VERSION=$(grep 'version' book_shop/book-shop/pyproject.toml | cut -d'"' -f2)" >> "$GITHUB_ENV"
+
+      - name: test the env var
+        run: echo "${{ env.VERSION }}"
+
+      - name: set and output the version
+        id: set_version
+        run: echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  
+  test_version:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: check for the version
+        run: echo "version is :${{ needs.prepare.outputs.image_version }}"
+
+  docker_build_and_push:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: check out
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_USER_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_USER_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.REGION }}
+ 
+      
+      - name: docker login
+        run: |
+          aws ecr get-login-password --region ${{ secrets.REGION }} \
+          | docker login --username AWS --password-stdin \
+          ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com
+
+      - name: Build and push
+        run: |
+          docker build -t thumama/task:${{ needs.prepare.outputs.image_version }} book_shop/book-shop/.
+
+          docker tag thumama/task:${{ needs.prepare.outputs.image_version }} \
+          ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+
+          docker push \
+          ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+
+          echo "=====================success========================="
+
+  ec2-ssh-pull-and-run:
+    runs-on: ubuntu-latest
+    needs: [docker_build_and_push, prepare]
+    steps:
+        
+      - name: ec2 ssh and pull 
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            echo "version is:====> ${{ needs.prepare.outputs.image_version }}"
+            echo "================ssh works===================="
+            aws ecr get-login-password --region ${{ secrets.REGION }} \
+            | docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com
+
+            docker pull ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}\
+            .amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+
+            docker run --name test -dp 3001:3001 ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
