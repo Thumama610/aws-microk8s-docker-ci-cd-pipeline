@@ -98,3 +98,30 @@ jobs:
             .amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
 
             docker run --name test -dp 4000:4000 ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+      
+      - name: ec2 ssh and pull to main
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            echo "version is:====> ${{ needs.prepare.outputs.image_version }}"
+            echo "================ssh works===================="
+            aws ecr get-login-password --region ${{ secrets.REGION }} \
+            | sudo kubectl create secret docker-registry ecr-secret \
+            --docker-server=${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com \
+            --docker-username=AWS \
+            --docker-password-stdin
+
+            kubectl apply -f django-app.yaml
+
+            kubectl set image deployment/django-app \
+            django=${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+
+
+
+            
+            
+            
