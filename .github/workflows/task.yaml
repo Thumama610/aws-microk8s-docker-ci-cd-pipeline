@@ -21,13 +21,13 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           ls -a book-shop
-          echo "VERSION=$(grep 'version' book_shop/book-shop/pyproject.toml | grep -Eo '[0-9]+\.[0-9]+([.][0-9]+)*|[0-9]+')" >> "$GITHUB_ENV"
+          echo "VERSION=$(grep 'version' pyproject.toml | grep -Eo '[0-9]+\.[0-9]+([.][0-9]+)*|[0-9]+')" >> "$GITHUB_ENV"
 
       - name: extract version (dev)
         if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
           ls -a book-shop
-          echo "VERSION=$(grep 'version' book_shop/book-shop/pyproject.toml | cut -d'"' -f2)" >> "$GITHUB_ENV"
+          echo "VERSION=$(grep 'version' pyproject.toml | cut -d'"' -f2)" >> "$GITHUB_ENV"
 
       - name: test the env var
         run: echo "${{ env.VERSION }}"
