@@ -75,12 +75,12 @@ jobs:
 
           echo "=====================success========================="
 
-  ec2-ssh-pull-and-run:
+  ec2-ssh-pull-and-deploy:
     runs-on: ubuntu-latest
     needs: [docker_build_and_push, prepare]
     steps:
         
-      - name: ec2 ssh and pull 
+      - name: ec2 ssh and pull to dev
         if: ${{ github.ref == 'refs/heads/dev' }}
         uses: appleboy/ssh-action@v1
         with:
@@ -97,4 +97,4 @@ jobs:
             docker pull ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}\
             .amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
 
-            docker run --name test -dp 8080:4000 ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
+            docker run --name test -dp 4000:4000 ${{ secrets.AWS_ID }}.dkr.ecr.${{ secrets.REGION }}.amazonaws.com/thumama/task:${{ needs.prepare.outputs.image_version }}
