@@ -162,13 +162,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install gunicorn
+   # Install gunicorn
 RUN pip install --no-cache-dir gunicorn
 
-# Copy all files
+   # Copy all files
 COPY . /app/
 
-# Install your app
+   # Install your app
 RUN pip install /app/dist/*.whl*
 
 
