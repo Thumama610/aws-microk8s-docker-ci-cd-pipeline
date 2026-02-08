@@ -14,13 +14,7 @@ jobs:
       - name: check out
         uses: actions/checkout@v4
 
-      - name: extract version (main)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: |
-          echo "VERSION=$(grep 'version' pyproject.toml | grep -Eo '[0-9]+\.[0-9]+([.][0-9]+)*|[0-9]+')" >> "$GITHUB_ENV"
-
       - name: extract version (dev)
-        if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
           echo "VERSION=$(grep 'version' pyproject.toml | cut -d'"' -f2)" >> "$GITHUB_ENV"
 
@@ -75,7 +69,6 @@ jobs:
     needs: [docker_build_and_push, prepare]
     steps:
       - name: ec2 ssh and pull to dev
-        if: ${{ github.ref == 'refs/heads/dev' }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_IP }}
