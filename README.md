@@ -1,3 +1,148 @@
+# Django CI/CD Pipeline with GitHub Actions, Docker & AWS
+
+This repository contains a complete CI/CD pipeline for a Django application using **GitHub Actions**, **Docker**, and **AWS**.  
+The pipeline builds, versions, pushes Docker images to **Amazon ECR**, and deploys them automatically to:
+
+- **EC2 (Docker runtime)** on `dev` branch
+- **Kubernetes cluster** on `main` branch
+
+---
+
+## 🚀 Workflow Overview
+
+The pipeline is triggered automatically on `push` events and behaves differently depending on the branch:
+
+### 🔹 `dev` Branch (Development Environment)
+1. Extracts the application version from `pyproject.toml`
+2. Builds a Docker image using the extracted version
+3. Pushes the image to Amazon ECR
+4. Connects to an EC2 instance via SSH
+5. Pulls and runs the new Docker image using Docker
+
+### 🔹 `main` Branch (Production Environment)
+1. Extracts the application version from `pyproject.toml`
+2. Builds and pushes a versioned Docker image to Amazon ECR
+3. Connects to an EC2 instance hosting a Kubernetes cluster
+4. Creates/updates an ECR image pull secret
+5. Deploys the application using Kubernetes manifests
+6. Updates the running deployment image (rolling update)
+
+---
+
+## 🧱 Pipeline Jobs
+
+### 1️⃣ Prepare
+- Checks out the code
+- Extracts the application version from `pyproject.toml`
+- Exposes the version as a reusable output for other jobs
+
+### 2️⃣ Test Version
+- Verifies that the extracted version is correctly passed between jobs
+
+### 3️⃣ Docker Build & Push
+- Builds the Docker image
+- Tags it with the extracted version
+- Pushes it to Amazon ECR
+
+### 4️⃣ Deploy
+- **Dev:** SSH into EC2 and run the container directly using Docker
+- **Main:** Deploy to Kubernetes and update the running image
+
+---
+
+## 🐳 Docker Image Versioning
+
+The Docker image tag is dynamically generated from the version defined in:
+
+```toml
+pyproject.toml
+
+
+This ensures:
+
+Traceable deployments
+
+Easy rollbacks
+
+Consistent versioning across environments
+
+☁️ AWS Services Used
+
+Amazon ECR – Docker image registry
+
+Amazon EC2 – Hosting Docker runtime & Kubernetes cluster
+
+IAM – Secure access using GitHub Secrets
+
+🔐 Required GitHub Secrets
+
+Make sure the following secrets are configured in your repository:
+
+Secret Name	Description
+AWS_USER_ACCESS_KEY	AWS access key
+AWS_USER_SECRET_ACCESS_KEY	AWS secret key
+AWS_ID	AWS account ID
+REGION	AWS region
+EC2_IP	Public IP of EC2 instance
+EC2_USERNAME	SSH username
+EC2_PRIVATE_KEY	SSH private key
+
+📦 Kubernetes Deployment
+
+The production deployment uses a Kubernetes manifest:
+
+django-app.yaml
+
+
+The image is updated dynamically using:
+
+kubectl set image deployment/django-app django=<ECR_IMAGE:VERSION>
+
+
+This allows zero-downtime rolling updates.
+
+✅ Features
+
+Branch-based environments (dev / production)
+
+Automatic version extraction
+
+Docker image versioning
+
+Secure AWS authentication
+
+EC2 & Kubernetes deployment support
+
+Fully automated CI/CD pipeline
+
+🛠️ Technologies Used
+
+GitHub Actions
+
+Docker
+
+Django
+
+AWS (ECR, EC2, IAM)
+
+Kubernetes
+
+Bash
+
+Nginx
+
+🔧 Prerequisites & Environment Setup
+
+This section describes the required tools and configurations needed before running the CI/CD pipeline, including AWS, Docker, Kubernetes, GitHub Secrets, and Nginx configured as a reverse proxy.
+
+Nginx is used to route incoming traffic from standard HTTP ports to the application services:
+
+Port 80 → 3000 (Dockerized Django application on EC2 – development)
+
+Port 8080 → 4000 (Application service running inside containers / Kubernetes – production)
+
+This setup provides a clean entry point, improves security by hiding internal application ports, and allows seamless scaling and future SSL/TLS support.
+
 # microk8s installation
 
       sudo apt update && sudo apt upgrade -y
@@ -307,3 +452,8 @@ CMD ["--bind", "0.0.0.0:4000", "book_shop.wsgi:application"]
 <img width="1920" height="1041" alt="Screenshot (156) new" src="https://github.com/user-attachments/assets/cab0659e-ced8-4119-9b94-25ec78c122dd" />
 <img width="1920" height="1041" alt="Screenshot (155) new" src="https://github.com/user-attachments/assets/b5ca709d-c371-41cc-b586-fbae2b1b9a12" />
 <img width="1920" height="828" alt="Screenshot (157) new" src="https://github.com/user-attachments/assets/6239b6b0-f3b1-41aa-b6f0-d6ad1c8d6bfb" />
+
+👤 Author
+
+Thumama Alrawwad
+DevOps / Cloud Enthusiast
