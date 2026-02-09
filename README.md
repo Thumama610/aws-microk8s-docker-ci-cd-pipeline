@@ -52,11 +52,7 @@ The pipeline is triggered automatically on `push` events and behaves differently
 
 ## 🐳 Docker Image Versioning
 
-The Docker image tag is dynamically generated from the version defined in:
-
-```toml
-pyproject.toml
-
+The Docker image tag is dynamically generated from the version defined in ------> pyproject.toml
 
 This ensures:
 
