@@ -62,7 +62,7 @@ Easy rollbacks
 
 Consistent versioning across environments
 
-☁️ AWS Services Used
+## ☁️ AWS Services Used
 
 Amazon ECR – Docker image registry
 
@@ -70,7 +70,7 @@ Amazon EC2 – Hosting Docker runtime & Kubernetes cluster
 
 IAM – Secure access using GitHub Secrets
 
-🔐 Required GitHub Secrets
+## 🔐 Required GitHub Secrets
 
 Make sure the following secrets are configured in your repository:
 
@@ -83,7 +83,7 @@ EC2_IP	Public IP of EC2 instance
 EC2_USERNAME	SSH username
 EC2_PRIVATE_KEY	SSH private key
 
-📦 Kubernetes Deployment
+## 📦 Kubernetes Deployment
 
 The production deployment uses a Kubernetes manifest:
 
@@ -97,7 +97,7 @@ kubectl set image deployment/django-app django=<ECR_IMAGE:VERSION>
 
 This allows zero-downtime rolling updates.
 
-✅ Features
+## ✅ Features
 
 Branch-based environments (dev / production)
 
@@ -111,7 +111,7 @@ EC2 & Kubernetes deployment support
 
 Fully automated CI/CD pipeline
 
-🛠️ Technologies Used
+## 🛠️ Technologies Used
 
 GitHub Actions
 
@@ -127,7 +127,7 @@ Bash
 
 Nginx
 
-🔧 Prerequisites & Environment Setup
+## 🔧 Prerequisites & Environment Setup
 
 This section describes the required tools and configurations needed before running the CI/CD pipeline, including AWS, Docker, Kubernetes, GitHub Secrets, and Nginx configured as a reverse proxy.
 
