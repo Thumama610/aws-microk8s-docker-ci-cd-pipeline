@@ -141,8 +141,6 @@ This setup provides a clean entry point, improves security by hiding internal ap
 
 # microk8s installation
 
-      sudo apt update && sudo apt upgrade -y
-      sudo apt install -y curl wget apt-transport-https ca-certificates gnupg
       sudo snap install microk8s --classic
       sudo usermod -aG microk8s ubuntu
       mkdir -p ~/.kube
