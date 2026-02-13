@@ -226,7 +226,7 @@ This setup provides a clean entry point, improves security by hiding internal ap
             server_name _;
     
             location / {
-                proxy_pass http://127.0.0.1:32000;
+                proxy_pass http://<EC2_PRIVATE_IP>:32000;
                 proxy_http_version 1.1;
     
                 proxy_set_header Host $host;
